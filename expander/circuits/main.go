@@ -1,11 +1,15 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/big"
+	"os"
 
-	"github.com/PolyhedraZK/ExpanderCompilerCollection"
-	"github.com/PolyhedraZK/ExpanderCompilerCollection/builder"
-	"github.com/PolyhedraZK/ExpanderCompilerCollection/field/bn254"
+	"github.com/PolyhedraZK/ExpanderCompilerCollection/ecgo"
+	"github.com/PolyhedraZK/ExpanderCompilerCollection/ecgo/integration"
+	"github.com/PolyhedraZK/ExpanderCompilerCollection/test"
+	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/frontend"
 )
 
@@ -2831,28 +2835,25 @@ func component_73_Withdraw_2_(api frontend.API, inputs []frontend.Variable) []fr
 	t1487 := inputs[1]
 	t1488 := api.Sub(t1486, t1487)
 	t1489 := inputs[3]
-	t1501 := inputs[4]
-	t1502 := inputs[6]
-	t1506 := inputs[5]
-	t1507 := inputs[7]
-	t1510 := inputs[0]
 	sub_inputs1 := make([]frontend.Variable, 2)
 	sub_inputs1[0] = t1485
 	sub_inputs1[1] = t1489
 	sub_outputs1 := component_70_Poseidon_2_(api, sub_inputs1)
-	t1513 := sub_outputs1[0]
+	_ = sub_outputs1[0]
 	outputs := make([]frontend.Variable, 0)
 	api.AssertIsEqual(t1488, 0)
 	return outputs
 }
+
 type Circuit struct {
-	Root frontend.Variable `gnark:",public"`
+	Root          frontend.Variable `gnark:",public"`
 	NullifierHash frontend.Variable `gnark:",public"`
-	Nullifier frontend.Variable
-	Secret frontend.Variable
-	PathElements [2]frontend.Variable
-	PathIndices [2]frontend.Variable
+	Nullifier     frontend.Variable
+	Secret        frontend.Variable
+	PathElements  [2]frontend.Variable
+	PathIndices   [2]frontend.Variable
 }
+
 func (c *Circuit) Define(api frontend.API) error {
 	inputs := make([]frontend.Variable, 8)
 	inputs[0] = c.Root
@@ -2866,9 +2867,108 @@ func (c *Circuit) Define(api frontend.API) error {
 	component_73_Withdraw_2_(api, inputs)
 	return nil
 }
+
+// Estructura para mapear el JSON de entrada
+type InputData struct {
+	Root          string   `json:"root"`
+	NullifierHash string   `json:"nullifierHash"`
+	Nullifier     string   `json:"nullifier"`
+	Secret        string   `json:"secret"`
+	PathElements  []string `json:"pathElements"`
+	PathIndices   []int    `json:"pathIndices"`
+}
+
+// Función para convertir un string hexadecimal a un número de Go (`frontend.Variable`)
+func hexToVariable(hexStr string) frontend.Variable {
+	n := new(big.Int)
+	n.SetString(hexStr[2:], 16) // Ignoramos el "0x" inicial
+	return n
+}
+
 func main() {
-	_, err := ExpanderCompilerCollection.Compile(bn254.ScalarField, &Circuit{})
+
+	// JSON de entrada
+	jsonData := `{
+		"root": "0x11aecbbfb437e5677960ee0a9cf0e43975214b8c0cfe0327d2f618e73c05c5ea",
+		"nullifierHash": "0x157cef5f4ba2f139aecb41b479d2efbc6d888aa89a4ff10ec6850c69829f960f",
+		"nullifier": "0x0990fb0fa550d25d6ef750aa84898d944af9568656c913d14056615d86dddc54",
+		"secret": "0x07ecd6ff9737eb11d19e77a84bf2d9269a72569fd656ee7773ea4a5f3cbc321d",
+		"pathElements": [
+			"0x1d83cc0d4195d4cc2315f3741630e89c22600c66c88684ed2b6e579472700dbb",
+			"0x22ad4ea9d906223178e5e07ce96027769ee28e66bcfc00237e69c08845cd3972"
+		],
+		"pathIndices": [1,0]
+	}`
+
+	// Parsear el JSON en la estructura InputData
+	var input InputData
+	err := json.Unmarshal([]byte(jsonData), &input)
+	if err != nil {
+		fmt.Println("Error al parsear JSON:", err)
+		return
+	}
+
+	// Crear el assignment usando los valores parseados
+	assignment := &Circuit{
+		Root:          hexToVariable(input.Root),
+		NullifierHash: hexToVariable(input.NullifierHash),
+		Nullifier:     hexToVariable(input.Nullifier),
+		Secret:        hexToVariable(input.Secret),
+		PathElements: [2]frontend.Variable{
+			hexToVariable(input.PathElements[0]),
+			hexToVariable(input.PathElements[1]),
+		},
+		PathIndices: [2]frontend.Variable{
+			frontend.Variable(input.PathIndices[0]),
+			frontend.Variable(input.PathIndices[1]),
+		},
+	}
+
+	// Mostrar la estructura asignada
+	fmt.Printf("Assignment: %+v\n", assignment)
+
+	circuit, _ := ecgo.Compile(ecc.BN254.ScalarField(), &Circuit{})
+	c := circuit.GetLayeredCircuit()
+	os.WriteFile("circuit.txt", c.Serialize(), 0o644)
+	inputSolver := circuit.GetInputSolver()
+	witness, _ := inputSolver.SolveInputAuto(assignment)
+	os.WriteFile("witness.txt", witness.Serialize(), 0o644)
+	if !test.CheckCircuit(c, witness) {
+		panic("verification failed")
+	}
+
+	circuit_name := "mio"
+	circuit_dir := "circuit.txt"
+	max_concurrency := 0
+	prover, err := integration.NewProver(circuit_dir, circuit_name, max_concurrency, true)
 	if err != nil {
 		panic(err)
 	}
+	witnessData, err := os.ReadFile("witness.txt")
+	if err != nil {
+		panic(err)
+	}
+	println("Generating proof...")
+	proof, err := prover.Prove(witnessData)
+	if err != nil {
+		panic(err)
+	}
+	println("proof:", proof[:8])
+	os.WriteFile("proof.txt", proof, 0o644)
+
+	println("Verifying proof...")
+	result, err := prover.Verify(witnessData, proof)
+	if err != nil {
+		panic(err)
+	}
+	println("verification result (expecting true):", result)
+
+	println("Verify invalid proof...")
+	invalid_proof := make([]byte, len(proof))
+	copy(invalid_proof, proof)
+	// flip a bit
+	invalid_proof[0] ^= 1
+	result, _ = prover.Verify(witnessData, invalid_proof)
+	println("verification result (expecting false):", result)
+
 }
