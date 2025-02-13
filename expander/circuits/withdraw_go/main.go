@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"os"
+	"reflect"
 
 	"github.com/PolyhedraZK/ExpanderCompilerCollection/ecgo"
 	"github.com/PolyhedraZK/ExpanderCompilerCollection/ecgo/integration"
@@ -2789,7 +2789,9 @@ func component_71_DualMux__(api frontend.API, inputs []frontend.Variable) []fron
 	api.AssertIsEqual(t1493, 0)
 	return outputs
 }
-func component_72_MerkleTreeChecker_2_(api frontend.API, inputs []frontend.Variable) []frontend.Variable {
+func component_72_MerkleTreeChecker_2_(api frontend.API, leaf frontend.Variable, inputs []frontend.Variable) []frontend.Variable {
+	//t1513 := leaf
+
 	t1500 := inputs[0]
 	t1501 := inputs[2]
 	t1502 := inputs[4]
@@ -2835,11 +2837,18 @@ func component_73_Withdraw_2_(api frontend.API, inputs []frontend.Variable) []fr
 	t1487 := inputs[1]
 	t1488 := api.Sub(t1486, t1487)
 	t1489 := inputs[3]
+	/*
+		t1501 := inputs[4]
+		t1502 := inputs[6]
+		t1506 := inputs[5]
+		t1507 := inputs[7]
+		t1510 := inputs[0]
+	*/
 	sub_inputs1 := make([]frontend.Variable, 2)
 	sub_inputs1[0] = t1485
 	sub_inputs1[1] = t1489
 	sub_outputs1 := component_70_Poseidon_2_(api, sub_inputs1)
-	_ = sub_outputs1[0]
+	component_72_MerkleTreeChecker_2_(api, sub_outputs1, inputs)
 	outputs := make([]frontend.Variable, 0)
 	api.AssertIsEqual(t1488, 0)
 	return outputs
@@ -2867,70 +2876,39 @@ func (c *Circuit) Define(api frontend.API) error {
 	component_73_Withdraw_2_(api, inputs)
 	return nil
 }
-
-// Estructura para mapear el JSON de entrada
-type InputData struct {
-	Root          string   `json:"root"`
-	NullifierHash string   `json:"nullifierHash"`
-	Nullifier     string   `json:"nullifier"`
-	Secret        string   `json:"secret"`
-	PathElements  []string `json:"pathElements"`
-	PathIndices   []int    `json:"pathIndices"`
-}
-
-// Función para convertir un string hexadecimal a un número de Go (`frontend.Variable`)
-func hexToVariable(hexStr string) frontend.Variable {
-	n := new(big.Int)
-	n.SetString(hexStr[2:], 16) // Ignoramos el "0x" inicial
-	return n
-}
-
 func main() {
+	circuit, _ := ecgo.Compile(ecc.BN254.ScalarField(), &Circuit{})
+	c := circuit.GetLayeredCircuit()
 
-	// JSON de entrada
-	jsonData := `{
-		"root": "0x11aecbbfb437e5677960ee0a9cf0e43975214b8c0cfe0327d2f618e73c05c5ea",
-		"nullifierHash": "0x157cef5f4ba2f139aecb41b479d2efbc6d888aa89a4ff10ec6850c69829f960f",
-		"nullifier": "0x0990fb0fa550d25d6ef750aa84898d944af9568656c913d14056615d86dddc54",
-		"secret": "0x07ecd6ff9737eb11d19e77a84bf2d9269a72569fd656ee7773ea4a5f3cbc321d",
-		"pathElements": [
-			"0x1d83cc0d4195d4cc2315f3741630e89c22600c66c88684ed2b6e579472700dbb",
-			"0x22ad4ea9d906223178e5e07ce96027769ee28e66bcfc00237e69c08845cd3972"
-		],
-		"pathIndices": [1,0]
-	}`
+	// Convertir los valores hexadecimales a big.Int
+	root, _ := new(big.Int).SetString("11aecbbfb437e5677960ee0a9cf0e43975214b8c0cfe0327d2f618e73c05c5ea", 16)
+	nullifierHash, _ := new(big.Int).SetString("157cef5f4ba2f139aecb41b479d2efbc6d888aa89a4ff10ec6850c69829f960f", 16)
+	nullifier, _ := new(big.Int).SetString("0990fb0fa550d25d6ef750aa84898d944af9568656c913d14056615d86dddc54", 16)
+	secret, _ := new(big.Int).SetString("07ecd6ff9737eb11d19e77a84bf2d9269a72569fd656ee7773ea4a5f3cbc321d", 16)
+	pathElement1, _ := new(big.Int).SetString("1d83cc0d4195d4cc2315f3741630e89c22600c66c88684ed2b6e579472700dbb", 16)
+	pathElement2, _ := new(big.Int).SetString("22ad4ea9d906223178e5e07ce96027769ee28e66bcfc00237e69c08845cd3972", 16)
 
-	// Parsear el JSON en la estructura InputData
-	var input InputData
-	err := json.Unmarshal([]byte(jsonData), &input)
-	if err != nil {
-		fmt.Println("Error al parsear JSON:", err)
-		return
-	}
-
-	// Crear el assignment usando los valores parseados
+	// Asignar los valores a la estructura assignment
 	assignment := &Circuit{
-		Root:          hexToVariable(input.Root),
-		NullifierHash: hexToVariable(input.NullifierHash),
-		Nullifier:     hexToVariable(input.Nullifier),
-		Secret:        hexToVariable(input.Secret),
-		PathElements: [2]frontend.Variable{
-			hexToVariable(input.PathElements[0]),
-			hexToVariable(input.PathElements[1]),
-		},
-		PathIndices: [2]frontend.Variable{
-			frontend.Variable(input.PathIndices[0]),
-			frontend.Variable(input.PathIndices[1]),
-		},
+		Root:          root,
+		NullifierHash: nullifierHash,
+		Nullifier:     nullifier,
+		Secret:        secret,
+		PathElements:  [2]frontend.Variable{pathElement1, pathElement2},
+		PathIndices:   [2]frontend.Variable{big.NewInt(1), big.NewInt(0)},
 	}
 
 	// Mostrar la estructura asignada
 	fmt.Printf("Assignment: %+v\n", assignment)
 
-	circuit, _ := ecgo.Compile(ecc.BN254.ScalarField(), &Circuit{})
-	c := circuit.GetLayeredCircuit()
+	v := reflect.ValueOf(*assignment)
+	fmt.Println("Número de campos en assignment:", v.NumField())
+	fmt.Println("Número de variables en el circuito:", circuit.GetLayeredCircuit())
+	fmt.Println("Número de restricciones en el circuito:", circuit.GetInputSolver())
+
 	os.WriteFile("circuit.txt", c.Serialize(), 0o644)
 	inputSolver := circuit.GetInputSolver()
+	os.WriteFile("inputsolver.txt", inputSolver.Serialize(), 0o644)
 	witness, _ := inputSolver.SolveInputAuto(assignment)
 	os.WriteFile("witness.txt", witness.Serialize(), 0o644)
 	if !test.CheckCircuit(c, witness) {
@@ -2948,6 +2926,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	println("Generating proof...")
 	proof, err := prover.Prove(witnessData)
 	if err != nil {

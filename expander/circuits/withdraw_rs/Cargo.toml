@@ -1,0 +1,15 @@
+[package]
+name = "ecc_example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bindgen = "0.71.1"
+expander_config = { git = "https://github.com/PolyhedraZK/Expander", branch = "dev", package = "config" }
+gkr = { git = "https://github.com/PolyhedraZK/Expander", branch = "dev" }
+mpi_config = { git = "https://github.com/PolyhedraZK/Expander", branch = "dev" }
+expander_compiler = { git = "https://github.com/PolyhedraZK/ExpanderCompilerCollection", branch = "dev" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+num-bigint = "0.4"
+num-traits = "0.2"
