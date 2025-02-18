@@ -1,6 +1,5 @@
 # generated artifact
 *.txt
-*.json
 *.witness
 *.log
 __*

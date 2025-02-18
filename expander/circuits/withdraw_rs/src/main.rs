@@ -34,9 +34,9 @@ fn hex_to_field(hex: &str) -> [u64; 4] {
 
 // Read the JSON file and deserialize it
 fn read_input_from_file(filename: &str) -> InputData {
-    let file = File::open(filename).expect("No se pudo abrir el archivo de entrada");
+    let file = File::open(filename).expect("Could not open input file");
     let reader = BufReader::new(file);
-    serde_json::from_reader(reader).expect("Error al leer JSON")
+    serde_json::from_reader(reader).expect("Error reading input file")
 }
 
 fn main() {
@@ -135,7 +135,12 @@ declare_circuit!(WithdrawCircuit {
 
 impl Define<BN254Config> for WithdrawCircuit<Variable> {
     fn define(&self, builder: &mut API<BN254Config>) {
-         builder.assert_is_equal(self.path_indices[0], 1);
-         builder.assert_is_equal(self.path_indices[1], 0);
+        // Ensure root is equal to a specific value
+        let expected_root = BN254::from(hex_to_field("0x11aecbbfb437e5677960ee0a9cf0e43975214b8c0cfe0327d2f618e73c05c5ea"));
+        builder.assert_is_equal(self.root, expected_root);
+
+        // Add restriction on nullifier
+        let expected_nullifier = BN254::from(hex_to_field("0x0990fb0fa550d25d6ef750aa84898d944af9568656c913d14056615d86dddc54"));
+        builder.assert_is_equal(self.nullifier, expected_nullifier);
     }
 }
