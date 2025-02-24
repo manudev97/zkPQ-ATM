@@ -1,5 +1,5 @@
 [package]
-name = "ecc_example"
+name = "withdraw_rs"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,7 +8,7 @@ bindgen = "0.71.1"
 expander_config = { git = "https://github.com/PolyhedraZK/Expander", branch = "main", package = "config" }
 gkr = { git = "https://github.com/PolyhedraZK/Expander", branch = "main" }
 mpi_config = { git = "https://github.com/PolyhedraZK/Expander", branch = "main" }
-expander_compiler = { git = "https://github.com/lean-apple/ExpanderCompilerCollection", branch = "master" }
+expander_compiler = { git = "https://github.com/PolyhedraZK/ExpanderCompilerCollection", branch = "master" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 num-bigint = "0.4"

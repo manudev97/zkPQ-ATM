@@ -86,6 +86,10 @@ fn main() {
     let mut expander_circuit = compile_result.layered_circuit
         .export_to_expander::<<BN254Config as Config>::DefaultGKRFieldConfig>()
         .flatten();
+
+    expander_circuit.identify_rnd_coefs();
+    expander_circuit.identify_structure_info();
+
     let config = expander_config::Config::<<BN254Config as Config>::DefaultGKRConfig>::new(
         expander_config::GKRScheme::Vanilla,
         mpi_config::MPIConfig::new(),
@@ -142,5 +146,33 @@ impl Define<BN254Config> for WithdrawCircuit<Variable> {
         // Add restriction on nullifier
         let expected_nullifier = BN254::from(hex_to_field("0x0990fb0fa550d25d6ef750aa84898d944af9568656c913d14056615d86dddc54"));
         builder.assert_is_equal(self.nullifier, expected_nullifier);
+
+        // Restriction on nullifier_hash
+        let expected_nullifier_hash = BN254::from(hex_to_field("0x157cef5f4ba2f139aecb41b479d2efbc6d888aa89a4ff10ec6850c69829f960f"));
+        builder.assert_is_equal(self.nullifier_hash, expected_nullifier_hash);
+
+        // Restriction on secret
+        let expected_secret = BN254::from(hex_to_field("0x07ecd6ff9737eb11d19e77a84bf2d9269a72569fd656ee7773ea4a5f3cbc321d"));
+        builder.assert_is_equal(self.secret, expected_secret);
+
+        // Restriction on path_elements
+        let expected_path_elements = [
+            BN254::from(hex_to_field("0x1d83cc0d4195d4cc2315f3741630e89c22600c66c88684ed2b6e579472700dbb")),
+            BN254::from(hex_to_field("0x22ad4ea9d906223178e5e07ce96027769ee28e66bcfc00237e69c08845cd3972")),
+        ];
+
+        for i in 0..LEVELS {
+            builder.assert_is_equal(self.path_elements[i], expected_path_elements[i]);
+        }
+
+        // Restriction on path_indices
+        let expected_path_indices = [
+            BN254::from(1u64),
+            BN254::from(0u64),
+        ];
+
+        for i in 0..LEVELS {
+            builder.assert_is_equal(self.path_indices[i], expected_path_indices[i]);
+        }
     }
 }
