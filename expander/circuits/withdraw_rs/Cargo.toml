@@ -6,10 +6,14 @@ edition = "2021"
 [dependencies]
 bindgen = "0.71.1"
 expander_config = { git = "https://github.com/PolyhedraZK/Expander", branch = "main", package = "config" }
+circuit-std-rs = { git = "https://github.com/PolyhedraZK/ExpanderCompilerCollection", branch = "master" }
 gkr = { git = "https://github.com/PolyhedraZK/Expander", branch = "main" }
 mpi_config = { git = "https://github.com/PolyhedraZK/Expander", branch = "main" }
 expander_compiler = { git = "https://github.com/PolyhedraZK/ExpanderCompilerCollection", branch = "master" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 num-bigint = "0.4"
+rand = "0.8.5"
 num-traits = "0.2"
+plonky2 = "1.0.2"  
+tiny-keccak = { version = "2.0.2", features = [ "sha3", "keccak" ] }
