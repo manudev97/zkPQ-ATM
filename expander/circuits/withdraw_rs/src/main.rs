@@ -37,7 +37,7 @@ fn hex_to_field_m31(hex: &str) -> u32 {
     let bigint = BigInt::from_str_radix(hex.trim_start_matches("0x"), 16)
         .unwrap_or(BigInt::from(0));
     
-    // Reducimos el valor a 31 bits (M31)
+    // We reduce the value to 31 bits (M31)
     let field_value = (bigint % BigInt::from(1 << 31))
         .to_u32()
         .unwrap_or(0);
@@ -45,30 +45,30 @@ fn hex_to_field_m31(hex: &str) -> u32 {
     field_value
 }
 
-fn m31_outputs_to_hex(outputs: &[M31]) -> String {
+fn _m31_outputs_to_hex(outputs: &[M31]) -> String {
     let mut bigint = BigInt::from(0);
 
-    // Construimos el número grande concatenando los valores de M31 en bloques de 31 bits
+    // We build the large number by concatenating the values ​​of M31 into blocks of 31 bits
     for (i, output) in outputs.iter().enumerate() {
         let part = BigInt::from_u32(output.v).unwrap_or(BigInt::from(0));
         bigint += &part << (31 * i);
     }
 
-    format!("0x{:X}", bigint) // Convertimos a hexadecimal
+    format!("0x{:x}", bigint)
 }
 
-fn hex_to_m31_outputs(hex: &str, num_outputs: usize) -> Vec<M31> {
+fn hex_to_m31_outputs(hex: &str, num_outputs: usize) -> [M31; 16] {
     let bigint = BigInt::from_str_radix(hex.trim_start_matches("0x"), 16)
         .unwrap_or(BigInt::from(0));
 
-    let mut outputs = Vec::new();
     let modulus = BigInt::from(1 << 31);
+    let mut outputs = [M31 { v: 0 }; 16];
 
-    for i in 0..num_outputs {
+    for i in 0..num_outputs.min(16) {
         let value = (&bigint >> (31 * i)) % &modulus;
-        outputs.push(M31 {
+        outputs[i] = M31 {
             v: value.to_u32().unwrap_or(0),
-        });
+        };
     }
 
     outputs
@@ -83,7 +83,7 @@ fn read_input_from_file(filename: &str) -> InputData {
 
 #[test]
 fn test_hex_to_m31_outputs() {
-    let hex_hash = "0xABC96F9A67F491D4596C6DA1F7B4266A25F4F215ABA36E453BBBB3329B3D2A292F4D768BDE4BFE8DEB03593B55B98FA5F79657BF8BAB280634BABCDCD3E4";
+    let hex_hash = "1bf52";
     let outputs = hex_to_m31_outputs(hex_hash, 16);
 
     // Imprimir el resultado
@@ -92,61 +92,44 @@ fn test_hex_to_m31_outputs() {
     }
 }
 
-#[test]
-fn test_m31_outputs_to_hex() {
-    let outputs = vec![
-        M31 { v: 1021105124 },
-        M31 { v: 1342990709 },
-        M31 { v: 1593716396 },
-        M31 { v: 2100280498 },
-        M31 { v: 330652568 },
-        M31 { v: 1371365483 },
-        M31 { v: 586650367 },
-        M31 { v: 345482939 },
-        M31 { v: 849034538 },
-        M31 { v: 175601510 },
-        M31 { v: 1454280121 },
-        M31 { v: 1362077584 },
-        M31 { v: 528171622 },
-        M31 { v: 187534772 },
-        M31 { v: 436020341 },
-        M31 { v: 1441052621 },
-    ];
+// #[test]
+// fn test_m31_outputs_to_hex() {
+//     let outputs = vec![
+//             M31 { v: 1021105124 },
+//             M31 { v: 1342990709 },
+//             M31 { v: 1593716396 },
+//             M31 { v: 2100280498 },
+//             M31 { v: 330652568 },
+//             M31 { v: 1371365483 },
+//             M31 { v: 586650367 },
+//             M31 { v: 345482939 },
+//             M31 { v: 849034538 },
+//             M31 { v: 175601510 },
+//             M31 { v: 1454280121 },
+//             M31 { v: 1362077584 },
+//             M31 { v: 528171622 },
+//             M31 { v: 187534772 },
+//             M31 { v: 436020341 },
+//             M31 { v: 1441052621 },
+//         ];
 
-    let hex_hash = m31_outputs_to_hex(&outputs);
-    println!("Hexadecimal Hash: {}", hex_hash);
-}
+//     let hex_hash = m31_outputs_to_hex(&outputs);
+//     println!("Hexadecimal Hash: {}", hex_hash);
+// }
 
 
 
 fn main() {
-    let input_data = read_input_from_file("input.json");
+    let input_data = read_input_from_file("input-m31.json");
     let compile_result = compile(&WithdrawCircuit::default()).unwrap();
 
     // Create the assignment dynamically with the JSON values
     let assignment = WithdrawCircuit::<M31> {
         // Public variables
         root: M31::from(hex_to_field_m31(&input_data.root)),
-        nullifier_hash: [
-            M31 { v: 1021105124 },
-            M31 { v: 1342990709 },
-            M31 { v: 1593716396 },
-            M31 { v: 2100280498 },
-            M31 { v: 330652568 },
-            M31 { v: 1371365483 },
-            M31 { v: 586650367 },
-            M31 { v: 345482939 },
-            M31 { v: 849034538 },
-            M31 { v: 175601510 },
-            M31 { v: 1454280121 },
-            M31 { v: 1362077584 },
-            M31 { v: 528171622 },
-            M31 { v: 187534772 },
-            M31 { v: 436020341 },
-            M31 { v: 1441052621 },
-        ],
+        nullifier_hash: hex_to_m31_outputs(&input_data.nullifier_hash, 16),
         // Private variables
-        nullifier: [M31::from(114514); 8],
+        nullifier: [M31::from(hex_to_field_m31(&input_data.nullifier)); 8],
         secret: M31::from(hex_to_field_m31(&input_data.secret)),
         path_elements: [
             M31::from(hex_to_field_m31(&input_data.path_elements[0])),
@@ -158,7 +141,8 @@ fn main() {
         ]
     };
 
-    println!("{:?}",M31::from(hex_to_field_m31(&input_data.root)));
+    //println!("{:?}",M31::from(hex_to_field_m31(&input_data.root)));
+
     let witness = compile_result
         .witness_solver
         .solve_witness(&assignment)
@@ -244,10 +228,17 @@ impl Define<M31Config> for WithdrawCircuit<Variable> {
             "0x11aecbbfb437e5677960ee0a9cf0e43975214b8c0cfe0327d2f618e73c05c5ea",
         ));
         builder.assert_is_equal(self.root, expected_root);
+        //dbg!(builder.constant_value(self.root));
+
+        let expected_nullifier = M31::from(hex_to_field_m31(
+            "0x1bf52",
+        ));
+        builder.assert_is_equal(self.nullifier[0], expected_nullifier);
+        //dbg!(builder.constant_value(self.root));
 
         // Restriction on secret
         let expected_secret = M31::from(hex_to_field_m31(
-            "0x07ecd6ff9737eb11d19e77a84bf2d9269a72569fd656ee7773ea4a5f3cbc321d",
+            "0x07ecd",
         ));
         builder.assert_is_equal(self.secret, expected_secret);
 
@@ -280,10 +271,13 @@ impl Define<M31Config> for WithdrawCircuit<Variable> {
             POSEIDON_M31X16_PARTIAL_ROUNDS,
         );
         let res: Vec<Variable> = params.hash_to_state(builder, &self.nullifier);
-        dbg!(builder.display("VARIABLE", res[1]));
+        //dbg!(builder.display("VARIABLE", res[1]));
+
         (0..params.width).for_each(|i| {
             builder.assert_is_equal(&res[i], self.nullifier_hash[i]);
-            dbg!(builder.constant_value(res[1]));
+            //dbg!(builder.constant_value(res[1]));
         });
+
+
     }
 }

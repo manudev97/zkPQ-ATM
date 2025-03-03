@@ -1,0 +1,7 @@
+{"root": "0x11aecbbfb437e5677960ee0a9cf0e43975214b8c0cfe0327d2f618e73c05c5ea",
+ "nullifier_hash": "0xabc96f9a67f491d4596c6da1f7b4266a25f4f215aba36e453bbbb3329b3d2a292f4d768bde4bfe8deb03593b55b98fa5f79657bf8bab280634babcdcd3e4",
+ "nullifier": "0x1bf52",
+ "secret": "0x07ecd",
+ "path_elements": ["0x1d83cc0d4195d4cc2315f3741630e89c22600c66c88684ed2b6e579472700dbb", "0x22ad4ea9d906223178e5e07ce96027769ee28e66bcfc00237e69c08845cd3972"],
+ "path_indices": [1,0]
+}
