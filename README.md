@@ -41,13 +41,12 @@ The system uses zero-knowledge proofs to allow users to withdraw funds without r
 
 ## Technical Implementation
 
-### Zero-Knowledge Circuits
-- **withdraw.circom**: Main circuit that verifies:
+### Zero-Knowledge Circuits (Expander)
+- **withdraw_rs/main.rs**: Main circuit that verifies:
 - Proper construction of the commitment
 - Correctness of the Merkle proof
 - Proper derivation of the nullifier hash
-
-- **merkleTree.circom**: Implements the verification of Merkle inclusion proofs
+- Implements the verification of Merkle inclusion proofs
 
 ### Implementation Approaches
 The project includes two separate implementations:
