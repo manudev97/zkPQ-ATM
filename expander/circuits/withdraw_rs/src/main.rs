@@ -360,38 +360,34 @@ impl Define<M31Config> for WithdrawCircuit<Variable> {
 
         dbg!(commitment_hash);
 
-        // for (i, hash_var) in commitment_hash.iter().enumerate() {
-        //     builder.display(&format!("commitment_hash[{}]", i), *hash_var);
-        // }
+        for (i, hash_var) in commitment_hash.iter().enumerate() {
+            api.display(&format!("commitment_hash[{}]", i), *hash_var);
+        }
 
-        // Llamar al subcircuito MerkleTreeChecker
-        // let merkle_root = builder.memorized_simple_call(
-        //     move |api: &mut API<M31Config>, inputs: &Vec<Variable>| {
-        //         // Extraer los valores de inputs
-        //         let leaf = commitment_hash.clone(); // leaf es un Vec<Variable>
-        //         let root = inputs[0]; // root es un solo Variable
-        //         let path_elements = &inputs[1..1 + LEVELS]; // path_elements es un slice de Variable
-        //         let path_indices = &inputs[1 + LEVELS..1 + 2 * LEVELS]; // path_indices es un slice de Variable
+        // Calling the MerkleTreeChecker subcircuit
+        let merkle_root = api.memorized_simple_call(
+            move |api: &mut API<M31Config>, inputs: &Vec<Variable>| {
+                // Extract values ​​from inputs
+                let leaf = commitment_hash.clone(); // leaf is a Vec<Variable>
+                let root = inputs[0]; //root is a single Variable
+                let path_elements = &inputs[1..1 + LEVELS]; // path_elements is a slice of Variable
+                let path_indices = &inputs[1 + LEVELS..1 + 2 * LEVELS]; // path_indices is a slice of Variable
 
-        //         // Llamar a merkle_tree_checker
-        //         merkle_tree_checker(api, leaf, root, path_elements, path_indices);
+                // Calling merkle_tree_checker
+                merkle_tree_checker(api, leaf, root, path_elements, path_indices);
 
-        //         // Devolver la raíz como salida
-        //         vec![root]
-        //     },
-        //     &[
-        //         // Pasar root
-        //         self.root,
-        //         // Pasar path_elements
-        //         self.path_elements[0],
-        //         self.path_elements[1],
-        //         // Pasar path_indices
-        //         self.path_indices[0],
-        //         self.path_indices[1],
-        //     ],
-        // );
+                vec![root]
+            },
+            &[
+                self.root,
+                self.path_elements[0],
+                self.path_elements[1],
+                self.path_indices[0],
+                self.path_indices[1],
+            ],
+        );
 
-        // // Verificar que la raíz calculada coincide con la raíz proporcionada
-        // builder.assert_is_equal(merkle_root[0], self.root);
+        // Check that the calculated root matches the provided root
+        api.assert_is_equal(merkle_root[0], self.root);
     }
 }

@@ -16,6 +16,9 @@ zkPQ-ATM/
         └── withdraw_go/       # Go implementation using Expander
 ```
 
+## Additional documentation
+- *[GKR from Scratch for zkPQ-ATM](GKR-zkPQ-ATM.md)*
+
 ## How It Works
 
 ### Core Privacy Mechanism
