@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 bindgen = "0.71.1"
+arith = { git = "https://github.com/PolyhedraZK/Expander", branch = "main" }
 expander_config = { git = "https://github.com/PolyhedraZK/Expander", branch = "main", package = "config" }
 circuit-std-rs = { git = "https://github.com/PolyhedraZK/ExpanderCompilerCollection", branch = "master" }
 gkr = { git = "https://github.com/PolyhedraZK/Expander", branch = "main" }
