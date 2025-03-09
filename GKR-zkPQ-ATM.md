@@ -22,3 +22,6 @@ In addition to M31, Expander supports two other main fields [View Fields in Expa
 - GF2: This binary field is ideal for boolean circuits, where operations are performed in bit arithmetic. GF2 is especially useful in applications requiring boolean logic verifications or calculations in binary systems.
 
 The choice of M31 for this project is due to its unique balance between efficiency and ease of implementation, making it perfect for arithmetic circuits in zero-knowledge proof systems like the GKR protocol.
+
+
+Arithmetic circuit in $F_{2^{31}-1}$ for the GKR protocol
