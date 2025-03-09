@@ -5,15 +5,15 @@ zkPQ-ATM is a privacy-focused transaction system implemented using zero-knowledg
 
 ---------------------------------------
 
-<img src="assets/1.png" alt="zkp_alibaba" width="500" height="300"/>
+<img src="assets/1.png" alt="1" width="500" height="300"/>
 
 ---------------------------------------
 
-<img src="assets/2.png" alt="zkp_alibaba" width="500" height="300"/>
+<img src="assets/2.png" alt="2" width="500" height="300"/>
 
 ---------------------------------------
 
-<img src="assets/3.png" alt="zkp_alibaba" width="500" height="300"/>
+<img src="assets/3.png" alt="3" width="500" height="300"/>
 
 ---------------------------------------
 
